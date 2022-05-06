@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Obtener Linea</title>
+    <title>Obtener Polígono</title>
 
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -54,16 +54,16 @@
 		<div class="inner">
 
 		<?PHP 
-		ECHO "<h2>Obtener Línea</h2>";
-		ECHO "Una forma simple de obtener una línea de un mapa y guardarla en la base de datos PostgreSQL, utilizando las herramientas de LeafletDraw http://leaflet.github.io/Leaflet.draw/docs/leaflet-draw-latest.html";
-		ECHO "<form action=\"guardarLinea.php\" method=\"GET\">";
+		ECHO "<h2>Obtener Polígono</h2>";
+		ECHO "Una forma simple de obtener una polígono de un mapa y guardarla en la base de datos PostgreSQL, utilizando las herramientas de LeafletDraw http://leaflet.github.io/Leaflet.draw/docs/leaflet-draw-latest.html";
+		ECHO "<form action=\"guardarPoligono.php\" method=\"GET\">";
 			ECHO "<input type=\"hidden\" id=\"coordenada\" name=\"coordenada\">";
 			ECHO "<div class=\"inner\">";
 		ECHO "<br>";
 		ECHO "<div id=\"map\" style=\"height: 400px; border: 1px solid #ccc\"></div>";
 
 		ECHO "<section class=\"wrapper style2\">";
-		ECHO "<input type=\"submit\" value=\"Guardar Línea\">";
+		ECHO "<input type=\"submit\" value=\"Guardar Polígono\">";
 		ECHO "</form>";
         	ECHO "</div>";
         	ECHO "</section>";
@@ -91,8 +91,8 @@ var osmUrl = 'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
                 showArea: true
     	    },
 	    marker: false,
-	    polyline: true,
-	    polygon: false,
+	    polyline: false,
+	    polygon: true,
 	    circle: false,
 	    circlemarker: false,
 	    rectangle: false
@@ -115,23 +115,28 @@ map.on('draw:created', function (e) {
     var type = e.layerType,
         layer = e.layer;
 
-	if(type == 'polyline')
+	if(type == 'polygon')
 		{
-		let obtPuntosLinea = layer.getLatLngs();
-		//Obtiene las coordenadas de los puntos de la linea en el mapa
-		let puntosLinea = obtPuntosLinea.toString();
-		//Convierte a cadena de caracteres con este formato "LatLng(19.437902, -99.13916),LatLng(19.436081, -99.135381)"
-		//Para obtener solo los puntos se va a remover el texto innecesario. 
-		let removerLatLng = puntosLinea.replace(/LatLng\(/g, ''); 
-		//Remueve la primera parte del texto quedando "19.437902, -99.13916),19.436081, -99.135381)"
+		let obtPuntosPoligono = layer.getLatLngs();
+		//Obtiene las coordenadas de los puntos del poligono en el mapa
+		let puntosPoligono = obtPuntosPoligono.toString();
+		//Convierte a cadena de caracteres con este formato "LatLng(19.437481, -99.139123),LatLng(19.433677, -99.144444),LatLng(19.433151, -99.134059)"
+		//Para obtener solo los puntos se va a remover el texto innecesario. "LatLng("
+		let removerLatLng = puntosPoligono.replace(/LatLng\(/g, ''); 
+		//Remueve la primera parte del texto quedando "19.437481, -99.139123),19.433677, -99.144444),19.433151, -99.134059)"
 		let removerComas = removerLatLng.replace(/\,/g, '');
-		//Remueve las comas quedando "19.437902 -99.13916)19.436081 -99.135381)"
-		var cambiarParentesis = removerComas.replace(/\)/g, ',');
-		//Cambia los parentesis por comas quedando "19.437902 -99.13916,19.436081 -99.135381,"
-		var linea = cambiarParentesis.substring(0, cambiarParentesis.length - 1);
-		//Remueve el ultimo caracter del string, en este caso la coma al final.
-                document.getElementById('coordenada').value = linea;
-		//Guarda los puntos de la linea en la variable coordenada.
+		console.log(removerComas, "removerComas");
+		//Remueve las comas quedando "19.437481 -99.139123)19.433677 -99.144444)19.433151 -99.134059)"
+		let cambiarParentesis = removerComas.replace(/\)/g, ',');
+		//Cambia los parentesis por comas quedando "19.437481 -99.139123,19.433677 -99.144444,19.433151 -99.134059,"
+		let primerpunto = removerLatLng.substr(0, removerLatLng.indexOf('),')); 
+		//Para cerrar el poligono se utiliza el primer punto, se remueven los otros puntos.
+        let ppunto = primerpunto.replace(/\,/g, '');
+
+		let poligono = cambiarParentesis + ppunto;
+		//Se agrega el primer punto al final de las coordenadas.
+        document.getElementById('coordenada').value = poligono;
+		//Guarda los puntos del poligono en la variable coordenada.
 		}
 
 
